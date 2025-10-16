@@ -2,18 +2,27 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX_CITIES 30
+#define VAN 0
+#define TRUCK 1
+#define LORRY 2
+#define CAPACITY 0
+#define  RATE_PER_KM 1
+#define AVG_SPEED 2
+#define FUEL_EFFICIENCY 3
 int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount);
 void  updateCity(char cities[MAX_CITIES][100],int currentCityCount);
 int removeCity(char cities[MAX_CITIES][100],int currentCityCount);
 void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount);
 void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100]);
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
+void storeVehicleDetails(int vehicleTypes[3][4]);
 int main()
 {
     int choice=0;
     int currentCityCount=0;
     char cities[MAX_CITIES][100];
     int distances[MAX_CITIES][MAX_CITIES]= {0};
+    int vehicleTypes[3][4];
     do
     {
         printf("Logistic Management System \n");
@@ -192,7 +201,7 @@ void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITI
     printf("%-15s", "From/To");
     for (int i = 0; i < currentCityCount; i++)
         printf("%-10s\t", cities[i]);
-        printf("\n");
+    printf("\n");
     for (int j = 0; j < currentCityCount; j++)
     {
         printf("%-15s\t", cities[j]);
@@ -214,4 +223,18 @@ void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITI
         printf("\n");
     }
     printf("\n");
+}
+void storeVehicleDetails(int vehicleTypes[3][4])
+{
+
+    vehicleTypes[VAN][CAPACITY]=1000;
+    vehicleTypes[VAN][RATE_PER_KM]=30;
+    vehicleTypes[VAN][FUEL_EFFICIENCY]=12;
+    vehicleTypes[TRUCK][CAPACITY]=5000;
+    vehicleTypes[TRUCK][RATE_PER_KM]=40;
+    vehicleTypes[TRUCK][FUEL_EFFICIENCY]=6;
+    vehicleTypes[LORRY][CAPACITY]=10000;
+    vehicleTypes[LORRY][RATE_PER_KM]=80;
+    vehicleTypes[LORRY][FUEL_EFFICIENCY]=4;
+
 }
