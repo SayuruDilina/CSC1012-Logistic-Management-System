@@ -21,6 +21,7 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
 double calcDeliveryCost(int D,int R,int W);
 double calcEstimatedDiliveryTime(int D,int S);
 double  calcFuelConsumption(int D,int E);
+double fuelCost(double fuelUsed,int F );
 int main()
 {
     int choice=0;
@@ -328,4 +329,10 @@ double  calcFuelConsumption(int D,int E)
 {
     double fuelUsed=D/E;
     return fuelUsed;
+}
+
+double fuelCost(double fuelUsed,int F )
+{
+    double cost=fuelUsed*F;
+    return cost;
 }
