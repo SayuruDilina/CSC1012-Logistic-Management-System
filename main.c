@@ -18,6 +18,7 @@ void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void storeVehicleDetails(int vehicleTypes[3][4]);
 int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
+double calcDeliveryCost(int D,int R,int W);
 int main()
 {
     int choice=0;
@@ -308,4 +309,9 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
     return currentOrderCount;
 }
 
+double calcDeliveryCost(int D,int R,int W)
+{
 
+    double cost=D*R*(1+W*(1/10000));
+    return cost;
+}
