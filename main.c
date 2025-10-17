@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX_CITIES 30
+#define MAX_ORDERS 1000
 #define VAN 0
 #define TRUCK 1
 #define LORRY 2
@@ -16,6 +17,7 @@ void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount);
 void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100]);
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void storeVehicleDetails(int vehicleTypes[3][4]);
+int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
 int main()
 {
     int choice=0;
@@ -23,6 +25,8 @@ int main()
     char cities[MAX_CITIES][100];
     int distances[MAX_CITIES][MAX_CITIES]= {0};
     int vehicleTypes[3][4];
+    int  orders[MAX_ORDERS][4];
+    int currentOrderCount=0;
     do
     {
         printf("Logistic Management System \n");
@@ -32,6 +36,7 @@ int main()
         printf("4.Display all cities\n");
         printf("5.Store Distances \n");
         printf("6.Display distances \n");
+        printf("7.Place order \n");
         printf("Enter your choice:");
         scanf(" %d",&choice);
 
@@ -54,6 +59,10 @@ int main()
             break;
         case 6:
             displayDistances(distances,cities,currentCityCount);
+            break;
+        case 7:
+            storeVehicleDetails(vehicleTypes);
+            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentCityCount);
             break;
         default:
             printf("Invalid");
@@ -238,3 +247,65 @@ void storeVehicleDetails(int vehicleTypes[3][4])
     vehicleTypes[LORRY][FUEL_EFFICIENCY]=4;
 
 }
+
+int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount)
+{
+
+    int tempOrders[MAX_ORDERS][4];
+    int tempIndex=0;
+    int vehicle=0;
+    char ch='N';
+    do
+    {
+        do
+        {
+            printf("Enter Source City Index:");
+            scanf(" %d",&tempOrders[tempIndex][0]);
+
+            printf("Enter  Destination City Index:");
+            scanf(" %d",&tempOrders[tempIndex][1]);
+
+            if(tempOrders[tempIndex][0]==tempOrders[tempIndex][1])
+            {
+                printf("Source and destination cannot be same enter again.\n");
+            }
+        }
+        while(tempOrders[tempIndex][0]==tempOrders[tempIndex][1]);
+        do
+        {
+            printf("Enter weight(in kg):");
+            scanf(" %d",&tempOrders[tempIndex][2]);
+
+            printf("Enter  vehicle  type(VAN=1,Truck=2,Lorry=3):");
+            scanf(" %d",&vehicle);
+
+
+            if(tempOrders[tempIndex][2]>vehicleTypes[vehicle-1][CAPACITY])
+            {
+                printf("This capacity cant carry from this vehicle type..choose other one.\n");
+
+            }
+        }
+        while(tempOrders[tempIndex][2]>vehicleTypes[vehicle-1][CAPACITY]);
+
+        orders[currentOrderCount][0]=tempOrders[tempIndex][0];
+        orders[currentOrderCount][1]=tempOrders[tempIndex][1];
+        orders[currentOrderCount][2]=tempOrders[tempIndex][2];
+        orders[currentOrderCount][3]=vehicle;
+
+        printf("Your order placed successfully.\n");
+        printf("Order details\n");
+        printf("\nSource city index %d ..\n",orders[currentOrderCount][0]);
+        printf("Destination city index %d ..\n",orders[currentOrderCount][1]);
+        printf("Weight %d ..\n",orders[currentOrderCount][2]);
+        printf("Vehicle Type %d ..\n\n",orders[currentOrderCount][3]);
+        printf("Do you want to place another order(Y/N):");
+        scanf(" %c",&ch);
+        currentOrderCount++;
+        tempIndex++;
+    }
+    while(ch!='N');
+    return currentOrderCount;
+}
+
+
