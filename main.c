@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX_CITIES 30
-#define MAX_ORDERS 1000
+#define MAX_ORDERS 50
 #define VAN 0
 #define TRUCK 1
 #define LORRY 2
@@ -22,6 +22,9 @@ double calcDeliveryCost(int D,int R,int W);
 double calcEstimatedDiliveryTime(int D,int S);
 double  calcFuelConsumption(int D,int E);
 double fuelCost(double fuelUsed,int F );
+double totOpretaionalCost(double deliveryCost,double fuelCost);
+double calcProfit(double cost);
+double calcCharge(double totCost,double profit);
 int main()
 {
     int choice=0;
@@ -335,4 +338,23 @@ double fuelCost(double fuelUsed,int F )
 {
     double cost=fuelUsed*F;
     return cost;
+}
+
+double totOpretaionalCost(double deliveryCost,double fuelCost)
+{
+
+    double totCost=deliveryCost+fuelCost;
+    return totCost;
+}
+
+double calcProfit(double cost)
+{
+    double profit =cost*0.25;
+    return profit;
+}
+
+double calcCharge(double totCost,double profit)
+{
+    double customerCharge=totCost+profit;
+    return customerCharge;
 }
