@@ -20,6 +20,7 @@ void storeVehicleDetails(int vehicleTypes[3][4]);
 int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
 double calcDeliveryCost(int D,int R,int W);
 double calcEstimatedDiliveryTime(int D,int S);
+double  calcFuelConsumption(int D,int E);
 int main()
 {
     int choice=0;
@@ -321,4 +322,10 @@ double calcEstimatedDiliveryTime(int D,int S)
 {
     double time=D/S;
     return time;
+}
+
+double  calcFuelConsumption(int D,int E)
+{
+    double fuelUsed=D/E;
+    return fuelUsed;
 }
