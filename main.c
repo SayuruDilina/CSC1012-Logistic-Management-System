@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX_CITIES 30
-#define MAX_ORDERS 1000
+#define MAX_ORDERS 50
 #define VAN 0
 #define TRUCK 1
 #define LORRY 2
@@ -18,6 +18,13 @@ void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void storeVehicleDetails(int vehicleTypes[3][4]);
 int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
+double calcDeliveryCost(int D,int R,int W);
+double calcEstimatedDiliveryTime(int D,int S);
+double  calcFuelConsumption(int D,int E);
+double fuelCost(double fuelUsed,int F );
+double totOpretaionalCost(double deliveryCost,double fuelCost);
+double calcProfit(double cost);
+double calcCharge(double totCost,double profit);
 int main()
 {
     int choice=0;
@@ -308,4 +315,46 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
     return currentOrderCount;
 }
 
+double calcDeliveryCost(int D,int R,int W)
+{
 
+    double cost=D*R*(1+W*(1/10000));
+    return cost;
+}
+
+double calcEstimatedDiliveryTime(int D,int S)
+{
+    double time=D/S;
+    return time;
+}
+
+double  calcFuelConsumption(int D,int E)
+{
+    double fuelUsed=D/E;
+    return fuelUsed;
+}
+
+double fuelCost(double fuelUsed,int F )
+{
+    double cost=fuelUsed*F;
+    return cost;
+}
+
+double totOpretaionalCost(double deliveryCost,double fuelCost)
+{
+
+    double totCost=deliveryCost+fuelCost;
+    return totCost;
+}
+
+double calcProfit(double cost)
+{
+    double profit =cost*0.25;
+    return profit;
+}
+
+double calcCharge(double totCost,double profit)
+{
+    double customerCharge=totCost+profit;
+    return customerCharge;
+}
