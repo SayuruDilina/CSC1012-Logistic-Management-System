@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #define MAX_CITIES 30
 #define MAX_ORDERS 50
 #define VAN 0
@@ -10,6 +11,10 @@
 #define  RATE_PER_KM 1
 #define AVG_SPEED 2
 #define FUEL_EFFICIENCY 3
+int bestPath[MAX_CITIES];
+int tempPath[MAX_CITIES];
+int visited[MAX_CITIES];
+int minDistance;
 int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount);
 void  updateCity(char cities[MAX_CITIES][100],int currentCityCount);
 int removeCity(char cities[MAX_CITIES][100],int currentCityCount);
@@ -25,6 +30,9 @@ double fuelCost(double fuelUsed,int F );
 double totOpretaionalCost(double deliveryCost,double fuelCost);
 double calcProfit(double cost);
 double calcCharge(double totCost,double profit);
+void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount,
+                          int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
+
 int main()
 {
     int choice=0;
@@ -44,6 +52,7 @@ int main()
         printf("5.Store Distances \n");
         printf("6.Display distances \n");
         printf("7.Place order \n");
+        printf("8.View delivery details \n");
         printf("Enter your choice:");
         scanf(" %d",&choice);
 
@@ -71,6 +80,8 @@ int main()
             storeVehicleDetails(vehicleTypes);
             currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentCityCount);
             break;
+        case 8:
+            handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount);
         default:
             printf("Invalid");
 
@@ -246,12 +257,19 @@ void storeVehicleDetails(int vehicleTypes[3][4])
     vehicleTypes[VAN][CAPACITY]=1000;
     vehicleTypes[VAN][RATE_PER_KM]=30;
     vehicleTypes[VAN][FUEL_EFFICIENCY]=12;
+    vehicleTypes[VAN][AVG_SPEED]=60;
+
     vehicleTypes[TRUCK][CAPACITY]=5000;
     vehicleTypes[TRUCK][RATE_PER_KM]=40;
     vehicleTypes[TRUCK][FUEL_EFFICIENCY]=6;
+    vehicleTypes[TRUCK][AVG_SPEED]=50;
+
+
     vehicleTypes[LORRY][CAPACITY]=10000;
     vehicleTypes[LORRY][RATE_PER_KM]=80;
     vehicleTypes[LORRY][FUEL_EFFICIENCY]=4;
+    vehicleTypes[LORRY][AVG_SPEED]=45;
+
 
 }
 
@@ -302,6 +320,7 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
 
         printf("Your order placed successfully.\n");
         printf("Order details\n");
+        printf("Order index(rembember this): %d",currentOrderCount);
         printf("\nSource city index %d ..\n",orders[currentOrderCount][0]);
         printf("Destination city index %d ..\n",orders[currentOrderCount][1]);
         printf("Weight %d ..\n",orders[currentOrderCount][2]);
@@ -315,10 +334,11 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
     return currentOrderCount;
 }
 
+
 double calcDeliveryCost(int D,int R,int W)
 {
 
-    double cost=D*R*(1+W*(1/10000));
+    double cost=D*R*(1+W*(1/10000.0));
     return cost;
 }
 
@@ -357,4 +377,100 @@ double calcCharge(double totCost,double profit)
 {
     double customerCharge=totCost+profit;
     return customerCharge;
+}
+
+
+void findLeastCostRouteRecursive(int distances[MAX_CITIES][MAX_CITIES],
+                                 int currentCity, int destCity,
+                                 int totalCities, int currentDistance, int depth)
+{
+    tempPath[depth] = currentCity;
+
+    if (currentCity == destCity)
+    {
+        if (currentDistance < minDistance)
+        {
+            minDistance = currentDistance;
+            for (int i = 0; i <= depth; i++)
+                bestPath[i] = tempPath[i];
+            bestPath[depth + 1] = -1;
+        }
+        return;
+    }
+
+
+    for (int next = 0; next < totalCities; next++)
+    {
+        if (!visited[next] && distances[currentCity][next] > 0)
+        {
+            visited[next] = 1;
+            findLeastCostRouteRecursive(distances, next, destCity, totalCities, currentDistance + distances[currentCity][next], depth + 1);
+            visited[next] = 0;
+        }
+    }
+}
+
+
+int findLeastCostRoute(int distances[MAX_CITIES][MAX_CITIES], int totalCities, int source, int dest)
+{
+    minDistance = INT_MAX;
+    for (int i = 0; i < totalCities; i++)
+        visited[i] = 0;
+
+    visited[source] = 1;
+    findLeastCostRouteRecursive(distances, source, dest, totalCities, 0, 0);
+    return minDistance;
+}
+
+void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount,
+                          int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount)
+{
+    int orderIndex=0;
+    printf("Enter order index given before:");
+    scanf(" %d",&orderIndex);
+    int from=orders[orderIndex][0];
+    int to=orders[orderIndex][1];
+    int D=findLeastCostRoute(distances,currentCityCount,from,to);
+    int vehicle=orders[orderIndex][3];
+    int weight=orders[orderIndex][2];
+    int R=vehicleTypes[vehicle][RATE_PER_KM];
+    int E=vehicleTypes[vehicle][FUEL_EFFICIENCY];
+    int S=vehicleTypes[vehicle][AVG_SPEED];
+    double baseCost=calcDeliveryCost(D,R,weight);
+    double fuelUsed=calcFuelConsumption(D,E);
+    double fuelC=fuelCost(fuelUsed,310);
+    double totOp=totOpretaionalCost(baseCost,fuelC);
+    double profit=calcProfit(totOp);
+    double custCharge=calcCharge(totOp,profit);
+    double estTime=calcEstimatedDiliveryTime(D,S);
+    printf("\n=============================================================\n");
+    printf("DELIVERY COST ESTIMATION\n");
+    printf("-------------------------------------------------------------\n");
+    printf("From: %s\n", cities[from]);
+    printf("To: %s\n", cities[to]);
+    printf("Minimum Distance: %d km\n", D);
+    printf("Vehicle: ");
+    if(vehicle == 1)
+    {
+        printf("Van\n");
+    }
+    else if(vehicle == 2)
+    {
+        printf("Truck\n");
+    }
+    else
+    {
+        printf("Lorry\n");
+    }
+    printf("Weight: %d kg\n", weight);
+    printf("-------------------------------------------------------------\n");
+    printf("Base Cost: %d x %d x (1 + %d/10000) = %.2f LKR\n", D, R, weight, baseCost);
+    printf("Fuel Used: %.2f L\n", fuelUsed);
+    printf("Fuel Cost: %.2f LKR\n", fuelC);
+    printf("Operational Cost: %.2f LKR\n", totOp);
+    printf("Profit: %.2f LKR\n", profit);
+    printf("Customer Charge: %.2f LKR\n", custCharge);
+    printf("Estimated Time: %.2f hours\n", estTime);
+    printf("=============================================================\n");
+
 }
