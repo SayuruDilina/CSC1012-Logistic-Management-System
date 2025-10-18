@@ -31,8 +31,11 @@ double totOpretaionalCost(double deliveryCost,double fuelCost);
 double calcProfit(double cost);
 double calcCharge(double totCost,double profit);
 void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount,
-                          int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
-
+                          int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount
+                          ,int *totalDeliveriesCompleted,int *totalDistanceCovered,double *totalDeliveryTimeHours,
+                          double *totalRevenue,double *totalProfit,int *longestRoute,int *shortestRoute);
+void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double totalDeliveryTimeHours,
+                  double totalRevenue,double totalProfit,int longestRoute,int shortestRoute);
 int main()
 {
     int choice=0;
@@ -42,6 +45,13 @@ int main()
     int vehicleTypes[3][4];
     int  orders[MAX_ORDERS][4];
     int currentOrderCount=0;
+    int totalDeliveriesCompleted = 0;
+    int totalDistanceCovered = 0;
+    double totalDeliveryTimeHours = 0.0;
+    double totalRevenue = 0.0;
+    double totalProfit= 0.0;
+    int longestRoute=0;
+    int shortestRoute=0;
     do
     {
         printf("Logistic Management System \n");
@@ -53,6 +63,7 @@ int main()
         printf("6.Display distances \n");
         printf("7.Place order \n");
         printf("8.View delivery details \n");
+        printf("9.Print reports \n");
         printf("Enter your choice:");
         scanf(" %d",&choice);
 
@@ -81,7 +92,13 @@ int main()
             currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentCityCount);
             break;
         case 8:
-            handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount);
+            handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
+                                 &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
+                                 ,&longestRoute,&shortestRoute);
+            break;
+        case 9:
+            printReports(totalDeliveriesCompleted,totalDistanceCovered,totalDeliveriesCompleted,totalRevenue,totalProfit,longestRoute,shortestRoute);
+            break;
         default:
             printf("Invalid");
 
@@ -399,13 +416,13 @@ void findLeastCostRouteRecursive(int distances[MAX_CITIES][MAX_CITIES],
     }
 
 
-    for (int next = 0; next < totalCities; next++)
+    for (int i = 0; i < totalCities; i++)
     {
-        if (!visited[next] && distances[currentCity][next] > 0)
+        if (!visited[i] && distances[currentCity][i] > 0)
         {
-            visited[next] = 1;
-            findLeastCostRouteRecursive(distances, next, destCity, totalCities, currentDistance + distances[currentCity][next], depth + 1);
-            visited[next] = 0;
+            visited[i] = 1;
+            findLeastCostRouteRecursive(distances, i, destCity, totalCities, currentDistance + distances[currentCity][i], depth + 1);
+            visited[i] = 0;
         }
     }
 }
@@ -423,7 +440,10 @@ int findLeastCostRoute(int distances[MAX_CITIES][MAX_CITIES], int totalCities, i
 }
 
 void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount,
-                          int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount)
+                          int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount
+                          ,int *totalDeliveriesCompleted,int *totalDistanceCovered,double *totalDeliveryTimeHours,
+                          double *totalRevenue,double *totalProfit,int *longestRoute,int *shortestRoute
+                         )
 {
     int orderIndex=0;
     printf("Enter order index given before:");
@@ -473,4 +493,44 @@ void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_
     printf("Estimated Time: %.2f hours\n", estTime);
     printf("=============================================================\n");
 
+    *totalDeliveriesCompleted+=1;
+    *totalDistanceCovered+=D;
+    *totalDeliveryTimeHours+=estTime;
+    *totalRevenue+=custCharge;
+    *totalProfit+=profit;
+    if (*totalDeliveriesCompleted == 1)
+    {
+        *longestRoute = D;
+        *shortestRoute = D;
+    }
+    else
+    {
+        if (D > *longestRoute)
+            *longestRoute = D;
+        if (D < *shortestRoute)
+            *shortestRoute = D;
+    }
+
+}
+
+void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double totalDeliveryTimeHours,
+                  double totalRevenue,double totalProfit,int longestRoute,int shortestRoute )
+{
+    printf("\n=================== DELIVERY REPORTS ===================\n");
+    printf("Total Deliveries Completed : %d\n", totalDeliveriesCompleted);
+    printf("Total Distance Covered     : %d km\n", totalDistanceCovered);
+    if (totalDeliveriesCompleted > 0)
+    {
+        double avgTime = totalDeliveryTimeHours / totalDeliveriesCompleted;
+        printf("Average Delivery Time      : %.2f hours\n", avgTime);
+    }
+    else
+    {
+        printf("Average Delivery Time      : N/A (no completed deliveries)\n");
+    }
+    printf("Total Revenue              : %.2f LKR\n", totalRevenue);
+    printf("Total Profit               : %.2f LKR\n", totalProfit);
+    printf("Longest Route Distance      : %d km\n", longestRoute);
+    printf("Shortest Route Distance     : %d km\n", shortestRoute);
+    printf("=========================================================\n");
 }
