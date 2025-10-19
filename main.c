@@ -36,6 +36,10 @@ void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_
                           double *totalRevenue,double *totalProfit,int *longestRoute,int *shortestRoute);
 void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double totalDeliveryTimeHours,
                   double totalRevenue,double totalProfit,int longestRoute,int shortestRoute);
+void saveRoutesToFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES], int cityCount);
+int loadRoutesFromFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES]);
+int loadDeliveriesFromFile(int orders[MAX_ORDERS][4]);
+void saveDeliveriesToFile(int orders[MAX_ORDERS][4], int orderCount);
 int main()
 {
     int choice=0;
@@ -52,6 +56,12 @@ int main()
     double totalProfit= 0.0;
     int longestRoute=0;
     int shortestRoute=0;
+
+    currentCityCount = loadRoutesFromFile(cities, distances);
+    currentOrderCount = loadDeliveriesFromFile(orders);
+
+    printf("Loaded %d cities and %d delivery records from files.\n",
+           currentCityCount, currentOrderCount);
     do
     {
         printf("Logistic Management System \n");
@@ -64,6 +74,7 @@ int main()
         printf("7.Place order \n");
         printf("8.View delivery details \n");
         printf("9.Print reports \n");
+        printf("10. Exit and Save Data\n");
         printf("Enter your choice:");
         scanf(" %d",&choice);
 
@@ -99,6 +110,13 @@ int main()
         case 9:
             printReports(totalDeliveriesCompleted,totalDistanceCovered,totalDeliveriesCompleted,totalRevenue,totalProfit,longestRoute,shortestRoute);
             break;
+        case 10:
+            saveRoutesToFile(cities, distances, currentCityCount);
+            saveDeliveriesToFile(orders, currentOrderCount);
+            printf("\nData saved successfully. Exiting program...\n");
+            return 0;
+            break;
+
         default:
             printf("Invalid");
 
@@ -106,6 +124,12 @@ int main()
 
     }
     while(choice!=-1);
+    // Save data before exit
+    saveRoutesToFile(cities, distances, currentCityCount);
+    saveDeliveriesToFile(orders, currentOrderCount);
+
+    printf("\nData saved successfully to routes.txt and deliveries.txt\n");
+
     return 0;
 }
 
@@ -533,4 +557,105 @@ void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double t
     printf("Longest Route Distance      : %d km\n", longestRoute);
     printf("Shortest Route Distance     : %d km\n", shortestRoute);
     printf("=========================================================\n");
+}
+
+void saveRoutesToFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES], int cityCount)
+{
+    FILE *fp = fopen("routes.txt", "w");
+    if (fp == NULL)
+    {
+        printf("Cannot open routes.txt.\n");
+        return;
+    }
+
+    fprintf(fp, "%d\n", cityCount);
+    for (int i = 0; i < cityCount; i++)
+    {
+        fprintf(fp, "%s\n", cities[i]);
+    }
+
+    for (int i = 0; i < cityCount; i++)
+    {
+        for (int j = 0; j < cityCount; j++)
+        {
+            fprintf(fp, "%d ", distances[i][j]);
+        }
+        fprintf(fp, "\n");
+    }
+
+    fclose(fp);
+}
+
+int loadRoutesFromFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES])
+{
+    FILE *fp = fopen("routes.txt", "r");
+    if (fp == NULL)
+    {
+        printf("No saved route file found.\n");
+        return 0;
+    }
+
+    int cityCount;
+    fscanf(fp, "%d\n", &cityCount);
+
+    for (int i = 0; i < cityCount; i++)
+    {
+        fgets(cities[i], 100, fp);
+        cities[i][strcspn(cities[i], "\n")] = '\0';
+    }
+
+    for (int i = 0; i < cityCount; i++)
+    {
+        for (int j = 0; j < cityCount; j++)
+        {
+            fscanf(fp, "%d", &distances[i][j]);
+        }
+    }
+
+    fclose(fp);
+    return cityCount;
+}
+void saveDeliveriesToFile(int orders[MAX_ORDERS][4], int orderCount)
+{
+    FILE *fp = fopen("deliveries.txt", "w");
+    if (fp == NULL)
+    {
+        printf("Cannot open deliveries.txt .\n");
+        return;
+    }
+
+    fprintf(fp, "%d\n", orderCount);
+    for (int i = 0; i < orderCount; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            fprintf(fp, "%d ", orders[i][j]);
+        }
+        fprintf(fp, "\n");
+    }
+
+    fclose(fp);
+}
+int loadDeliveriesFromFile(int orders[MAX_ORDERS][4])
+{
+    FILE *fp = fopen("deliveries.txt", "r");
+    if (fp == NULL)
+    {
+        printf("No saved deliveries found.\n");
+        return 0;
+    }
+
+    int orderCount;
+    fscanf(fp, "%d\n", &orderCount);
+
+    for (int i = 0; i < orderCount; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            fscanf(fp, "%d", &orders[i][j]);
+        }
+    }
+
+    fclose(fp);
+    return orderCount;
 }
