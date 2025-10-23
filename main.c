@@ -57,9 +57,10 @@ int main()
     int longestRoute=0;
     int shortestRoute=0;
 
+
     currentCityCount = loadRoutesFromFile(cities, distances);
     currentOrderCount = loadDeliveriesFromFile(orders);
-
+printf("%d",currentOrderCount);
     printf("Loaded %d cities and %d delivery records from files.\n",
            currentCityCount, currentOrderCount);
     do
@@ -100,7 +101,7 @@ int main()
             break;
         case 7:
             storeVehicleDetails(vehicleTypes);
-            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentCityCount);
+            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount);
             break;
         case 8:
             handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
@@ -475,7 +476,7 @@ void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_
     int from=orders[orderIndex][0];
     int to=orders[orderIndex][1];
     int D=findLeastCostRoute(distances,currentCityCount,from,to);
-    int vehicle=orders[orderIndex][3];
+    int vehicle=orders[orderIndex][3]-1;
     int weight=orders[orderIndex][2];
     int R=vehicleTypes[vehicle][RATE_PER_KM];
     int E=vehicleTypes[vehicle][FUEL_EFFICIENCY];
