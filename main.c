@@ -76,9 +76,8 @@ int main()
         printf("2.Display all cities\n");
         printf("3.Distance Management \n");
         printf("4.Place order \n");
-        printf("5.View delivery details \n");
-        printf("6.Print reports \n");
-        printf("7. Exit and Save Data\n");
+        printf("5.Print reports \n");
+        printf("6.Exit and Save Data\n");
         printf("Enter your choice:");
         scanf(" %d",&choice);
 
@@ -101,13 +100,11 @@ int main()
                                  &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
                                  ,&longestRoute,&shortestRoute,orderIndex,deliveryData);
             break;
+
         case 5:
-            printf("mukuth naha");
-            break;
-        case 6:
             printReports(totalDeliveriesCompleted,totalDistanceCovered,totalDeliveriesCompleted,totalRevenue,totalProfit,longestRoute,shortestRoute);
             break;
-        case 7:
+        case 6:
             saveRoutesToFile(cities, distances, currentCityCount);
             saveDeliveriesToFile(orders, currentOrderCount);
             printf("\nData saved successfully. Exiting program...\n");
