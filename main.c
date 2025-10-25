@@ -49,6 +49,8 @@ double storeDeliveries(double deliveryData[MAX_ORDERS][7],double baseCost,
                        double fuelUsed,double fuelC,double totOp,
                        double profit,double custCharge,double estTime,int orderIndex
                       );
+
+int handleCityAvailableCheck(int currentCityCount);
 int main()
 {
     int choice=0;
@@ -72,9 +74,12 @@ int main()
     printf("Loaded %d cities and %d delivery records from files.\n",
            currentCityCount, currentOrderCount);
     int totalDeliveriesCompleted = currentOrderCount;
+    int status=0;
     do
     {
-        printf("Logistic Management System \n");
+        printf("===================================================== \n");
+        printf("LOGISTIC MANAGEMENT SYSTEM \n");
+        printf("=====================================================\n");
         printf("1.City Management \n");
         printf("2.Display all cities\n");
         printf("3.Distance Management \n");
@@ -93,19 +98,44 @@ int main()
             dislayCurentities(cities,currentCityCount);
             break;
         case 3:
-            handleDistanceManagement(distances,cities,currentCityCount);
+            status=handleCityAvailableCheck(currentCityCount);
+            if(status==-1)
+            {
+                printf("There are no data available ..\n");
+            }
+            else
+            {
+                handleDistanceManagement(distances,cities,currentCityCount);
+            }
             break;
         case 4:
             storeVehicleDetails(vehicleTypes);
-            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount);
-            int orderIndex=currentOrderCount-1;
-            handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
-                                 &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
-                                 ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
+            status=handleCityAvailableCheck(currentCityCount);
+            if(status==-1)
+            {
+                printf("There are no data available ..\n");
+            }
+            else
+            {
+                currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount);
+                int orderIndex=currentOrderCount-1;
+                handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
+                                     &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
+                                     ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
+            }
+
             break;
 
         case 5:
-            printReports(orders, deliveryData,routesData,currentOrderCount);
+            status=handleCityAvailableCheck(currentCityCount);
+            if(status==-1)
+            {
+                printf("There are no data available ..\n");
+            }
+            else
+            {
+                printReports(orders, deliveryData,routesData,currentOrderCount);
+            }
             break;
         case 6:
             saveRoutesToFile(cities, distances, currentCityCount);
@@ -288,17 +318,39 @@ int removeCity(char cities[MAX_CITIES][100],int currentCityCount)
     return currentCityCount;
 }
 
+int handleCityAvailableCheck(int currentCityCount)
+{
+    if(currentCityCount>0)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+
+}
 void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount)
 {
-    for(int i=0; i<currentCityCount; i++)
+    int status=handleCityAvailableCheck(currentCityCount);
+    if(status==-1)
     {
-
-        printf("%d %s \n",i,cities[i]);
+        printf("There are no data available \n");
     }
+    else
+    {
+        for(int i=0; i<currentCityCount; i++)
+        {
+
+            printf("%d %s \n",i,cities[i]);
+        }
+    }
+
 }
 void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100])
 {
     int city1=0,city2=0,distance=0;
+
 
     printf("Enter index of the start city:");
     scanf(" %d",&city1);
