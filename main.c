@@ -33,13 +33,22 @@ double calcCharge(double totCost,double profit);
 void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount,
                           int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount
                           ,int *totalDeliveriesCompleted,int *totalDistanceCovered,double *totalDeliveryTimeHours,
-                          double *totalRevenue,double *totalProfit,int *longestRoute,int *shortestRoute);
-void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double totalDeliveryTimeHours,
-                  double totalRevenue,double totalProfit,int longestRoute,int shortestRoute);
+                          double *totalRevenue,double *totalProfit,int *longestRoute,int *shortestRoute
+                          ,int orderIndex,double deliveryData[MAX_ORDERS][7],int routesData[]);
+void printReports(int orders[MAX_ORDERS][4],
+                  double deliveryData[MAX_ORDERS][7],
+                  int routesData[],int orderCount);
+
 void saveRoutesToFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES], int cityCount);
 int loadRoutesFromFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES]);
-int loadDeliveriesFromFile(int orders[MAX_ORDERS][4]);
-void saveDeliveriesToFile(int orders[MAX_ORDERS][4], int orderCount);
+int loadDeliveriesFromFile(int orders[MAX_ORDERS][4],double deliveryData[MAX_ORDERS][7],int routesData[]);
+void saveDeliveriesToFile(int orders[MAX_ORDERS][4],double deliveryData[MAX_ORDERS][7],int routesData[], int orderCount);
+int handleCityManagement(char cities[MAX_CITIES][100],int *currentCityCount);
+int handleDistanceManagement(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
+double storeDeliveries(double deliveryData[MAX_ORDERS][7],double baseCost,
+                       double fuelUsed,double fuelC,double totOp,
+                       double profit,double custCharge,double estTime,int orderIndex
+                      );
 int main()
 {
     int choice=0;
@@ -49,88 +58,139 @@ int main()
     int vehicleTypes[3][4];
     int  orders[MAX_ORDERS][4];
     int currentOrderCount=0;
-    int totalDeliveriesCompleted = 0;
+
     int totalDistanceCovered = 0;
     double totalDeliveryTimeHours = 0.0;
     double totalRevenue = 0.0;
     double totalProfit= 0.0;
     int longestRoute=0;
     int shortestRoute=0;
-
+    double deliveryData[MAX_ORDERS][7];
+    int routesData[2];
     currentCityCount = loadRoutesFromFile(cities, distances);
-    currentOrderCount = loadDeliveriesFromFile(orders);
-
+    currentOrderCount = loadDeliveriesFromFile(orders,deliveryData,routesData);
     printf("Loaded %d cities and %d delivery records from files.\n",
            currentCityCount, currentOrderCount);
+    int totalDeliveriesCompleted = currentOrderCount;
     do
     {
         printf("Logistic Management System \n");
-        printf("1.Add City \n");
-        printf("2.update city \n");
-        printf("3.remove city \n");
-        printf("4.Display all cities\n");
-        printf("5.Store Distances \n");
-        printf("6.Display distances \n");
-        printf("7.Place order \n");
-        printf("8.View delivery details \n");
-        printf("9.Print reports \n");
-        printf("10. Exit and Save Data\n");
+        printf("1.City Management \n");
+        printf("2.Display all cities\n");
+        printf("3.Distance Management \n");
+        printf("4.Place order \n");
+        printf("5.Print reports \n");
+        printf("6.Exit and Save Data\n");
         printf("Enter your choice:");
         scanf(" %d",&choice);
 
         switch(choice)
         {
         case 1:
-            currentCityCount=addNewCity(cities,currentCityCount);
+            handleCityManagement(cities,&currentCityCount);
             break;
         case 2:
-            updateCity(cities,currentCityCount);
-            break;
-        case 3:
-            currentCityCount=removeCity(cities,currentCityCount);
-            break;
-        case 4:
             dislayCurentities(cities,currentCityCount);
             break;
-        case 5:
-            storeDistances(distances,cities);
+        case 3:
+            handleDistanceManagement(distances,cities,currentCityCount);
             break;
-        case 6:
-            displayDistances(distances,cities,currentCityCount);
-            break;
-        case 7:
+        case 4:
             storeVehicleDetails(vehicleTypes);
-            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentCityCount);
-            break;
-        case 8:
+            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount);
+            int orderIndex=currentOrderCount-1;
             handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
                                  &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
-                                 ,&longestRoute,&shortestRoute);
+                                 ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
             break;
-        case 9:
-            printReports(totalDeliveriesCompleted,totalDistanceCovered,totalDeliveriesCompleted,totalRevenue,totalProfit,longestRoute,shortestRoute);
+
+        case 5:
+            printReports(orders, deliveryData,routesData,currentOrderCount);
             break;
-        case 10:
+        case 6:
             saveRoutesToFile(cities, distances, currentCityCount);
-            saveDeliveriesToFile(orders, currentOrderCount);
+            saveDeliveriesToFile(orders,deliveryData,routesData, currentOrderCount);
             printf("\nData saved successfully. Exiting program...\n");
             return 0;
             break;
-
         default:
             printf("Invalid");
-
         }
 
     }
     while(choice!=-1);
-    // Save data before exit
-    saveRoutesToFile(cities, distances, currentCityCount);
-    saveDeliveriesToFile(orders, currentOrderCount);
 
+    saveRoutesToFile(cities, distances, currentCityCount);
+    saveDeliveriesToFile(orders,deliveryData,routesData,currentOrderCount);
     printf("\nData saved successfully to routes.txt and deliveries.txt\n");
 
     return 0;
+}
+int handleCityManagement(char cities[MAX_CITIES][100],int *currentCityCount)
+{
+    int choice=0;
+    do
+    {
+        printf("\n=== City Management ===\n");
+        printf("1. Add City\n");
+        printf("2. Update City\n");
+        printf("3. Remove City\n");
+        printf("4. Back to Main Menu\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice)
+        {
+        case 1:
+            *currentCityCount = addNewCity(cities, *currentCityCount);
+            break;
+        case 2:
+            updateCity(cities, *currentCityCount);
+            break;
+        case 3:
+            *currentCityCount = removeCity(cities, *currentCityCount);
+            break;
+        case 4:
+            printf("Returning to Main Menu...\n");
+            return 0;
+            break;
+        default:
+            printf("Invalid choice! Try again.\n");
+        }
+    }
+    while(choice!=-1);
+
+}
+int handleDistanceManagement(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount)
+{
+
+    int choice=0;
+    do
+    {
+        printf("\n=== Distance Management ===\n");
+        printf("1.Store Distances\n");
+        printf("2.Display Distances\n");
+        printf("3. Back to Main Menu\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice)
+        {
+        case 1:
+            storeDistances(distances,cities);
+            break;
+        case 2:
+            displayDistances(distances,cities,currentCityCount);
+            break;
+        case 3:
+            printf("Returning to Main Menu...\n");
+            return 0;
+            break;
+        default:
+            printf("Invalid choice! Try again.\n");
+        }
+    }
+    while(choice!=-1);
 }
 
 int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount)
@@ -321,57 +381,52 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
     int tempIndex=0;
     int vehicle=0;
     char ch='N';
+
     do
     {
-        do
+        printf("Enter Source City Index:");
+        scanf(" %d",&tempOrders[tempIndex][0]);
+
+        printf("Enter  Destination City Index:");
+        scanf(" %d",&tempOrders[tempIndex][1]);
+
+        if(tempOrders[tempIndex][0]==tempOrders[tempIndex][1])
         {
-            printf("Enter Source City Index:");
-            scanf(" %d",&tempOrders[tempIndex][0]);
-
-            printf("Enter  Destination City Index:");
-            scanf(" %d",&tempOrders[tempIndex][1]);
-
-            if(tempOrders[tempIndex][0]==tempOrders[tempIndex][1])
-            {
-                printf("Source and destination cannot be same enter again.\n");
-            }
+            printf("Source and destination cannot be same enter again.\n");
         }
-        while(tempOrders[tempIndex][0]==tempOrders[tempIndex][1]);
-        do
-        {
-            printf("Enter weight(in kg):");
-            scanf(" %d",&tempOrders[tempIndex][2]);
-
-            printf("Enter  vehicle  type(VAN=1,Truck=2,Lorry=3):");
-            scanf(" %d",&vehicle);
-
-
-            if(tempOrders[tempIndex][2]>vehicleTypes[vehicle-1][CAPACITY])
-            {
-                printf("This capacity cant carry from this vehicle type..choose other one.\n");
-
-            }
-        }
-        while(tempOrders[tempIndex][2]>vehicleTypes[vehicle-1][CAPACITY]);
-
-        orders[currentOrderCount][0]=tempOrders[tempIndex][0];
-        orders[currentOrderCount][1]=tempOrders[tempIndex][1];
-        orders[currentOrderCount][2]=tempOrders[tempIndex][2];
-        orders[currentOrderCount][3]=vehicle;
-
-        printf("Your order placed successfully.\n");
-        printf("Order details\n");
-        printf("Order index(rembember this): %d",currentOrderCount);
-        printf("\nSource city index %d ..\n",orders[currentOrderCount][0]);
-        printf("Destination city index %d ..\n",orders[currentOrderCount][1]);
-        printf("Weight %d ..\n",orders[currentOrderCount][2]);
-        printf("Vehicle Type %d ..\n\n",orders[currentOrderCount][3]);
-        printf("Do you want to place another order(Y/N):");
-        scanf(" %c",&ch);
-        currentOrderCount++;
-        tempIndex++;
     }
-    while(ch!='N');
+    while(tempOrders[tempIndex][0]==tempOrders[tempIndex][1]);
+    do
+    {
+        printf("Enter weight(in kg):");
+        scanf(" %d",&tempOrders[tempIndex][2]);
+
+        printf("Enter  vehicle  type(VAN=1,Truck=2,Lorry=3):");
+        scanf(" %d",&vehicle);
+
+
+        if(tempOrders[tempIndex][2]>vehicleTypes[vehicle-1][CAPACITY])
+        {
+            printf("This capacity cant carry from this vehicle type..choose other one.\n");
+
+        }
+    }
+    while(tempOrders[tempIndex][2]>vehicleTypes[vehicle-1][CAPACITY]);
+
+    orders[currentOrderCount][0]=tempOrders[tempIndex][0];
+    orders[currentOrderCount][1]=tempOrders[tempIndex][1];
+    orders[currentOrderCount][2]=tempOrders[tempIndex][2];
+    orders[currentOrderCount][3]=vehicle;
+
+    printf("Your order placed successfully.\n");
+    printf("Order details\n");
+    printf("Order index(rembember this): %d",currentOrderCount);
+    printf("\nSource city index %d ..\n",orders[currentOrderCount][0]);
+    printf("Destination city index %d ..\n",orders[currentOrderCount][1]);
+    printf("Weight %d ..\n",orders[currentOrderCount][2]);
+    printf("Vehicle Type %d ..\n\n",orders[currentOrderCount][3]);
+    currentOrderCount++;
+    tempIndex++;
     return currentOrderCount;
 }
 
@@ -385,7 +440,7 @@ double calcDeliveryCost(int D,int R,int W)
 
 double calcEstimatedDiliveryTime(int D,int S)
 {
-    double time=D/S;
+    double time=(double)D/S;
     return time;
 }
 
@@ -467,15 +522,14 @@ void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_
                           int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount
                           ,int *totalDeliveriesCompleted,int *totalDistanceCovered,double *totalDeliveryTimeHours,
                           double *totalRevenue,double *totalProfit,int *longestRoute,int *shortestRoute
+                          ,int orderIndex,double deliveryData[MAX_ORDERS][7],int routesData[]
                          )
 {
-    int orderIndex=0;
-    printf("Enter order index given before:");
-    scanf(" %d",&orderIndex);
+
     int from=orders[orderIndex][0];
     int to=orders[orderIndex][1];
     int D=findLeastCostRoute(distances,currentCityCount,from,to);
-    int vehicle=orders[orderIndex][3];
+    int vehicle=orders[orderIndex][3]-1;
     int weight=orders[orderIndex][2];
     int R=vehicleTypes[vehicle][RATE_PER_KM];
     int E=vehicleTypes[vehicle][FUEL_EFFICIENCY];
@@ -517,6 +571,8 @@ void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_
     printf("Estimated Time: %.2f hours\n", estTime);
     printf("=============================================================\n");
 
+
+    storeDeliveries(deliveryData,baseCost,fuelUsed,fuelC,totOp,profit,custCharge,estTime,orderIndex);
     *totalDeliveriesCompleted+=1;
     *totalDistanceCovered+=D;
     *totalDeliveryTimeHours+=estTime;
@@ -534,15 +590,62 @@ void handleDeliveryOutput(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_
         if (D < *shortestRoute)
             *shortestRoute = D;
     }
+    routesData[0]=*longestRoute;
+    routesData[1]=*shortestRoute;
 
 }
-
-void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double totalDeliveryTimeHours,
-                  double totalRevenue,double totalProfit,int longestRoute,int shortestRoute )
+double storeDeliveries(double deliveryData[MAX_ORDERS][7],double baseCost,
+                       double fuelUsed,double fuelC,double totOp,
+                       double profit,double custCharge,double estTime,int orderIndex
+                      )
 {
+
+    deliveryData[orderIndex][0]=baseCost;
+    deliveryData[orderIndex][1]=fuelUsed;
+    deliveryData[orderIndex][2]=fuelC;
+    deliveryData[orderIndex][3]=totOp;
+    deliveryData[orderIndex][4]=profit;
+    deliveryData[orderIndex][5]=custCharge;
+    deliveryData[orderIndex][6]=estTime;
+}
+void calculateTotalsFromFile(double deliveryData[MAX_ORDERS][7], int orderCount,
+                             int *totalDeliveriesCompleted,
+                             double *totalRevenue,
+                             double *totalProfit,
+                             double *totalDeliveryTimeHours)
+{
+    *totalDeliveriesCompleted = orderCount;
+    *totalRevenue = 0;
+    *totalProfit = 0;
+    *totalDeliveryTimeHours = 0;
+
+    for (int i = 0; i < orderCount; i++)
+    {
+        *totalRevenue += deliveryData[i][5];
+        *totalProfit += deliveryData[i][4];
+        *totalDeliveryTimeHours += deliveryData[i][6];
+    }
+}
+
+
+void printReports(int orders[MAX_ORDERS][4],
+                  double deliveryData[MAX_ORDERS][7],int routesData[],
+                  int orderCount)
+{
+    int totalDeliveriesCompleted = 0;
+    double totalRevenue = 0, totalProfit = 0, totalDeliveryTimeHours = 0;
+
+
+    calculateTotalsFromFile(deliveryData, orderCount,
+                            &totalDeliveriesCompleted,
+                            &totalRevenue, &totalProfit,
+                            &totalDeliveryTimeHours);
+
     printf("\n=================== DELIVERY REPORTS ===================\n");
     printf("Total Deliveries Completed : %d\n", totalDeliveriesCompleted);
-    printf("Total Distance Covered     : %d km\n", totalDistanceCovered);
+
+
+
     if (totalDeliveriesCompleted > 0)
     {
         double avgTime = totalDeliveryTimeHours / totalDeliveriesCompleted;
@@ -550,12 +653,12 @@ void printReports(int totalDeliveriesCompleted,int totalDistanceCovered,double t
     }
     else
     {
-        printf("Average Delivery Time      : N/A (no completed deliveries)\n");
+        printf("Average Delivery Time      : N/A (no deliveries)\n");
     }
+    printf("Min Distance               : %d \n",routesData[1]);
+    printf("Long Distance              : %d \n",routesData[0]);
     printf("Total Revenue              : %.2f LKR\n", totalRevenue);
     printf("Total Profit               : %.2f LKR\n", totalProfit);
-    printf("Longest Route Distance      : %d km\n", longestRoute);
-    printf("Shortest Route Distance     : %d km\n", shortestRoute);
     printf("=========================================================\n");
 }
 
@@ -580,6 +683,7 @@ void saveRoutesToFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MA
         {
             fprintf(fp, "%d ", distances[i][j]);
         }
+
         fprintf(fp, "\n");
     }
 
@@ -615,7 +719,7 @@ int loadRoutesFromFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][M
     fclose(fp);
     return cityCount;
 }
-void saveDeliveriesToFile(int orders[MAX_ORDERS][4], int orderCount)
+void saveDeliveriesToFile(int orders[MAX_ORDERS][4],double deliveryData[MAX_ORDERS][7],int routesData[],int orderCount)
 {
     FILE *fp = fopen("deliveries.txt", "w");
     if (fp == NULL)
@@ -631,12 +735,18 @@ void saveDeliveriesToFile(int orders[MAX_ORDERS][4], int orderCount)
         {
             fprintf(fp, "%d ", orders[i][j]);
         }
+        for (int j = 0; j < 7; j++)
+        {
+            fprintf(fp, "%.2lf ", deliveryData[i][j]);
+        }
+
         fprintf(fp, "\n");
     }
 
+    fprintf(fp, "\n%d %d\n", routesData[0], routesData[1]);
     fclose(fp);
 }
-int loadDeliveriesFromFile(int orders[MAX_ORDERS][4])
+int loadDeliveriesFromFile(int orders[MAX_ORDERS][4],double deliveryData[MAX_ORDERS][7],int routesData[])
 {
     FILE *fp = fopen("deliveries.txt", "r");
     if (fp == NULL)
@@ -654,8 +764,13 @@ int loadDeliveriesFromFile(int orders[MAX_ORDERS][4])
         {
             fscanf(fp, "%d", &orders[i][j]);
         }
+        for (int j = 0; j < 7; j++)
+        {
+            fscanf(fp, "%lf", &deliveryData[i][j]);
+        }
     }
-
+    fscanf(fp,"%d",&routesData[0]);
+    fscanf(fp,"%d",&routesData[1]);
     fclose(fp);
     return orderCount;
 }
