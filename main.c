@@ -160,7 +160,7 @@ int main()
         }
 
     }
-    while(choice!=-1);
+    while(choice!=6);
 
     saveRoutesToFile(cities, distances, currentCityCount);
     saveDeliveriesToFile(orders,deliveryData,routesData,currentOrderCount);
@@ -204,7 +204,7 @@ int handleCityManagement(char cities[MAX_CITIES][100],int *currentCityCount)
             printf("Invalid choice! Try again.\n");
         }
     }
-    while(choice!=-1);
+    while(choice!=4);
 
 }
 int handleDistanceManagement(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount)
@@ -240,7 +240,7 @@ int handleDistanceManagement(int distances[MAX_CITIES][MAX_CITIES],char cities[M
             printf("Invalid choice! Try again.\n");
         }
     }
-    while(choice!=-1);
+    while(choice!=3);
 }
 
 int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount)
@@ -282,7 +282,7 @@ int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount)
         scanf(" %c",&status);
         printf("\n");
     }
-    while(status != 'N');
+    while(status != 'N'&&status!='n');
     return currentCityCount;
 }
 
