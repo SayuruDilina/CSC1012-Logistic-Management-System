@@ -19,10 +19,12 @@ int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount);
 void  updateCity(char cities[MAX_CITIES][100],int currentCityCount);
 int removeCity(char cities[MAX_CITIES][100],int currentCityCount);
 void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount);
-void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100]);
+void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void storeVehicleDetails(int vehicleTypes[3][4]);
-int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
+int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount,
+                       int distances[MAX_CITIES][MAX_CITIES],
+                       int currentCityCount);
 double calcDeliveryCost(int D,int R,int W);
 double calcEstimatedDiliveryTime(int D,int S);
 double  calcFuelConsumption(int D,int E);
@@ -60,7 +62,7 @@ int main()
     int vehicleTypes[3][4];
     int  orders[MAX_ORDERS][4];
     int currentOrderCount=0;
-
+    int validate=0;
     int totalDistanceCovered = 0;
     double totalDeliveryTimeHours = 0.0;
     double totalRevenue = 0.0;
@@ -118,11 +120,20 @@ int main()
             }
             else
             {
-                currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount);
-                int orderIndex=currentOrderCount-1;
-                handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
-                                     &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
-                                     ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
+                validate=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount,distances,currentCityCount);
+                if(validate==-1)
+                {
+                    printf("Enter valid details please ..\n");
+                }
+                else
+                {
+                    currentOrderCount=validate;
+                    int orderIndex=currentOrderCount-1;
+                    handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
+                                         &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
+                                         ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
+                }
+
             }
 
             break;
@@ -215,7 +226,7 @@ int handleDistanceManagement(int distances[MAX_CITIES][MAX_CITIES],char cities[M
         switch(choice)
         {
         case 1:
-            storeDistances(distances,cities);
+            storeDistances(distances,cities,currentCityCount);
             break;
         case 2:
             displayDistances(distances,cities,currentCityCount);
@@ -373,7 +384,7 @@ void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount)
     }
 
 }
-void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100])
+void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount)
 {
     int city1=0,city2=0,distance=0;
 
@@ -388,6 +399,10 @@ void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES
     {
         printf("distance between same city is zero \n");
         distances[city1][city2] = 0;
+    }
+    else if(city1>currentCityCount || city2>currentCityCount)
+    {
+        printf("\nEnter valid source city  indexes......\n");
     }
     else
     {
@@ -458,13 +473,16 @@ void storeVehicleDetails(int vehicleTypes[3][4])
 
 }
 
-int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount)
+int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount,
+                       int distances[MAX_CITIES][MAX_CITIES],
+                       int currentCityCount)
 {
 
     int tempOrders[MAX_ORDERS][4];
     int tempIndex=0;
     int vehicle=0;
     char ch='N';
+
 
     printf("\n===============================================================\n");
     printf("\t\t PLACE ORDER\n");
@@ -477,9 +495,22 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
         printf("Enter  Destination City Index:");
         scanf(" %d",&tempOrders[tempIndex][1]);
 
+        if (tempOrders[tempIndex][0]< 0 || tempOrders[tempIndex][0] >= currentCityCount || tempOrders[tempIndex][1] < 0 || tempOrders[tempIndex][1] >= currentCityCount)
+        {
+            printf("Invalid city index! Please enter between 0 and %d.\n", currentCityCount - 1);
+            return -1;
+
+        }
         if(tempOrders[tempIndex][0]==tempOrders[tempIndex][1])
         {
             printf("Source and destination cannot be same enter again.\n");
+            return -1;
+        }
+
+        if (distances[tempOrders[tempIndex][0]][tempOrders[tempIndex][1]] == 0)
+        {
+            printf("Currently data not available for this delivery.\n");
+            return -1;
         }
     }
     while(tempOrders[tempIndex][0]==tempOrders[tempIndex][1]);
