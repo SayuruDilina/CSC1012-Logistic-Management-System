@@ -19,10 +19,12 @@ int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount);
 void  updateCity(char cities[MAX_CITIES][100],int currentCityCount);
 int removeCity(char cities[MAX_CITIES][100],int currentCityCount);
 void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount);
-void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100]);
+void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount);
 void storeVehicleDetails(int vehicleTypes[3][4]);
-int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount);
+int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount,
+                       int distances[MAX_CITIES][MAX_CITIES],
+                       int currentCityCount);
 double calcDeliveryCost(int D,int R,int W);
 double calcEstimatedDiliveryTime(int D,int S);
 double  calcFuelConsumption(int D,int E);
@@ -49,6 +51,8 @@ double storeDeliveries(double deliveryData[MAX_ORDERS][7],double baseCost,
                        double fuelUsed,double fuelC,double totOp,
                        double profit,double custCharge,double estTime,int orderIndex
                       );
+
+int handleCityAvailableCheck(int currentCityCount);
 int main()
 {
     int choice=0;
@@ -58,7 +62,7 @@ int main()
     int vehicleTypes[3][4];
     int  orders[MAX_ORDERS][4];
     int currentOrderCount=0;
-
+    int validate=0;
     int totalDistanceCovered = 0;
     double totalDeliveryTimeHours = 0.0;
     double totalRevenue = 0.0;
@@ -72,16 +76,20 @@ int main()
     printf("Loaded %d cities and %d delivery records from files.\n",
            currentCityCount, currentOrderCount);
     int totalDeliveriesCompleted = currentOrderCount;
+    int status=0;
     do
     {
-        printf("Logistic Management System \n");
-        printf("1.City Management \n");
-        printf("2.Display all cities\n");
-        printf("3.Distance Management \n");
-        printf("4.Place order \n");
-        printf("5.Print reports \n");
-        printf("6.Exit and Save Data\n");
-        printf("Enter your choice:");
+        printf("=============================================================== \n");
+        printf("\t\tLOGISTIC MANAGEMENT SYSTEM \n");
+        printf("===============================================================\n");
+        printf("\t \t 1. CITY  MANAGEMENT \n");
+        printf("\t \t 2. VIEW ALL CITIES\n");
+        printf("\t \t 3. DISTANCE MANAGEMENT \n");
+        printf("\t \t 4. PLACE ORDER \n");
+        printf("\t \t 5. PRINT REPORTS \n");
+        printf("\t \t 6. EXIT \n");
+        printf("===============================================================\n");
+        printf("\nEnter your choice:");
         scanf(" %d",&choice);
 
         switch(choice)
@@ -93,19 +101,53 @@ int main()
             dislayCurentities(cities,currentCityCount);
             break;
         case 3:
-            handleDistanceManagement(distances,cities,currentCityCount);
+            status=handleCityAvailableCheck(currentCityCount);
+            if(status==-1)
+            {
+                printf("There are no data available ..\n");
+            }
+            else
+            {
+                handleDistanceManagement(distances,cities,currentCityCount);
+            }
             break;
         case 4:
             storeVehicleDetails(vehicleTypes);
-            currentOrderCount=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount);
-            int orderIndex=currentOrderCount-1;
-            handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
-                                 &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
-                                 ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
+            status=handleCityAvailableCheck(currentCityCount);
+            if(status==-1)
+            {
+                printf("There are no data available ..\n");
+            }
+            else
+            {
+                validate=inputDeliveryOrder(orders,vehicleTypes,currentOrderCount,distances,currentCityCount);
+                if(validate==-1)
+                {
+                    printf("Enter valid details please ..\n");
+                }
+                else
+                {
+                    currentOrderCount=validate;
+                    int orderIndex=currentOrderCount-1;
+                    handleDeliveryOutput(distances,cities,currentCityCount,orders,vehicleTypes,currentOrderCount,
+                                         &totalDeliveriesCompleted,&totalDistanceCovered,&totalDeliveryTimeHours,&totalRevenue,&totalProfit
+                                         ,&longestRoute,&shortestRoute,orderIndex,deliveryData,routesData);
+                }
+
+            }
+
             break;
 
         case 5:
-            printReports(orders, deliveryData,routesData,currentOrderCount);
+            status=handleCityAvailableCheck(currentCityCount);
+            if(status==-1)
+            {
+                printf("There are no data available ..\n");
+            }
+            else
+            {
+                printReports(orders, deliveryData,routesData,currentOrderCount);
+            }
             break;
         case 6:
             saveRoutesToFile(cities, distances, currentCityCount);
@@ -131,12 +173,15 @@ int handleCityManagement(char cities[MAX_CITIES][100],int *currentCityCount)
     int choice=0;
     do
     {
-        printf("\n=== City Management ===\n");
-        printf("1. Add City\n");
-        printf("2. Update City\n");
-        printf("3. Remove City\n");
-        printf("4. Back to Main Menu\n");
-        printf("Enter your choice: ");
+        printf("\n=============================================================== \n");
+        printf("\t\t CITY MANAGEMENT \n");
+        printf("===============================================================\n");
+        printf("\t \t 1. ADD CITY\n");
+        printf("\t \t 2. UPDATE CITY\n");
+        printf("\t \t 3. REMOVE CITY\n");
+        printf(" \t \t 4. BACK TO MAIN MENU\n");
+        printf("===============================================================\n");
+        printf("\nEnter your choice: ");
         scanf("%d", &choice);
 
         switch(choice)
@@ -152,6 +197,7 @@ int handleCityManagement(char cities[MAX_CITIES][100],int *currentCityCount)
             break;
         case 4:
             printf("Returning to Main Menu...\n");
+            system("cls");
             return 0;
             break;
         default:
@@ -167,23 +213,27 @@ int handleDistanceManagement(int distances[MAX_CITIES][MAX_CITIES],char cities[M
     int choice=0;
     do
     {
-        printf("\n=== Distance Management ===\n");
-        printf("1.Store Distances\n");
-        printf("2.Display Distances\n");
-        printf("3. Back to Main Menu\n");
-        printf("Enter your choice: ");
+        printf("\n===============================================================\n");
+        printf("\t\t DISTANCE MANAGMENT\n");
+        printf("===============================================================\n");
+        printf("\t \t 1. STORE DISTANCES\n");
+        printf("\t \t 2. DISPLAY DISTANCES\n");
+        printf("\t \t 3. BACK TO MAIN MENU\n");
+        printf("===============================================================\n");
+        printf("\nEnter your choice: ");
         scanf("%d", &choice);
 
         switch(choice)
         {
         case 1:
-            storeDistances(distances,cities);
+            storeDistances(distances,cities,currentCityCount);
             break;
         case 2:
             displayDistances(distances,cities,currentCityCount);
             break;
         case 3:
             printf("Returning to Main Menu...\n");
+            system("cls");
             return 0;
             break;
         default:
@@ -199,10 +249,13 @@ int  addNewCity(char cities[MAX_CITIES][100],int currentCityCount)
     char tempCity[MAX_CITIES][100];
     int index=0;
     int tempStatus=1;
+    printf("\n===============================================================\n");
+    printf("\t\t ADD CITY\n");
+    printf("===============================================================\n");
     do
     {
         tempStatus = 1;
-        printf("Enter City Name:");
+        printf("\nEnter City Name:");
         scanf(" %s",tempCity[index]);
 
 
@@ -237,6 +290,9 @@ void  updateCity(char cities[MAX_CITIES][100],int currentCityCount)
 {
     char oldCity[100],newCity[100];
     int found=0;
+    printf("\n===============================================================\n");
+    printf("\t\t UPDATE CITY\n");
+    printf("===============================================================\n");
     printf("Enter old name of the city:");
     scanf(" %s",oldCity);
 
@@ -244,7 +300,7 @@ void  updateCity(char cities[MAX_CITIES][100],int currentCityCount)
     {
         if(strcmp(oldCity, cities[i]) == 0)
         {
-            printf("Enter New City Name:");
+            printf("\nEnter New City Name:");
             scanf(" %s",newCity);
             strcpy(cities[i],newCity);
             printf("City name updated successfull\n");
@@ -264,7 +320,10 @@ int removeCity(char cities[MAX_CITIES][100],int currentCityCount)
 {
     char removeCity[100];
     int found=0;
-    printf("Enter the city name you want to remove:");
+    printf("\n===============================================================\n");
+    printf("\t\t REMOVE CITY\n");
+    printf("===============================================================\n");
+    printf("\nEnter the city name you want to remove:");
     scanf(" %s",removeCity);
 
     for(int i=0; i<currentCityCount; i++)
@@ -288,19 +347,51 @@ int removeCity(char cities[MAX_CITIES][100],int currentCityCount)
     return currentCityCount;
 }
 
+int handleCityAvailableCheck(int currentCityCount)
+{
+    if(currentCityCount>0)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+
+}
 void dislayCurentities(char cities[MAX_CITIES][100],int currentCityCount)
 {
-    for(int i=0; i<currentCityCount; i++)
+    printf("\n===============================================================\n");
+    printf("\t\t ALL CITIES \n");
+    printf("===============================================================\n");
+    int status=handleCityAvailableCheck(currentCityCount);
+    if(status==-1)
     {
-
-        printf("%d %s \n",i,cities[i]);
+        printf("There are no data available \n");
     }
+    else
+    {
+        printf("\n+------------------------------------------------------------+\n");
+        printf("| %-6s | %-48s |\n", "ID", "       CITY NAME");
+        printf("+------------------------------------------------------------+\n");
+        for(int i=0; i<currentCityCount; i++)
+        {
+
+            printf("| %-6d | %-48s |\n", i, cities[i]);
+
+        }
+        printf("+------------------------------------------------------------+\n\n");
+    }
+
 }
-void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100])
+void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount)
 {
     int city1=0,city2=0,distance=0;
 
-    printf("Enter index of the start city:");
+    printf("\n===============================================================\n");
+    printf("\t\t STORE DISTANCES\n");
+    printf("===============================================================\n");
+    printf("\nEnter index of the start city:");
     scanf(" %d",&city1);
     printf("Enter index of the end city:");
     scanf(" %d",&city2);
@@ -308,6 +399,10 @@ void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES
     {
         printf("distance between same city is zero \n");
         distances[city1][city2] = 0;
+    }
+    else if(city1>currentCityCount || city2>currentCityCount)
+    {
+        printf("\nEnter valid source city  indexes......\n");
     }
     else
     {
@@ -324,31 +419,35 @@ void storeDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES
 
 void displayDistances(int distances[MAX_CITIES][MAX_CITIES],char cities[MAX_CITIES][100],int currentCityCount)
 {
-
+    printf("\n===============================================================\n");
+    printf("\t\t STORED DISTANCES\n");
+    printf("===============================================================\n");
     printf("\n");
-    printf("%-15s", "From/To");
+    printf("\n+--------------------------------------------------------+\n");
+    printf("| %-15s |", "From/To");
     for (int i = 0; i < currentCityCount; i++)
-        printf("%-10s\t", cities[i]);
-    printf("\n");
+        printf(" %-10s |", cities[i]);
+    printf("\n+--------------------------------------------------------+\n");
+
     for (int j = 0; j < currentCityCount; j++)
     {
-        printf("%-15s\t", cities[j]);
+        printf("| %-15s |", cities[j]);
         for (int k = 0; k < currentCityCount; k++)
         {
             if(j==k)
             {
-                printf("%-10d\t",distances[j][k]);
+                printf(" %-10d |", distances[j][k]);
             }
             else if(distances[j][k]==0)
             {
-                printf("%-15s\t","N/A");
+                printf(" %-10s |", "N/A");
             }
             else
             {
-                printf("%-10d\t", distances[j][k]);
+                printf(" %-10d |", distances[j][k]);
             }
         }
-        printf("\n");
+        printf("\n+--------------------------------------------------------+\n");
     }
     printf("\n");
 }
@@ -374,7 +473,9 @@ void storeVehicleDetails(int vehicleTypes[3][4])
 
 }
 
-int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount)
+int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int currentOrderCount,
+                       int distances[MAX_CITIES][MAX_CITIES],
+                       int currentCityCount)
 {
 
     int tempOrders[MAX_ORDERS][4];
@@ -382,17 +483,34 @@ int inputDeliveryOrder(int  orders[MAX_ORDERS][4],int vehicleTypes[3][4],int cur
     int vehicle=0;
     char ch='N';
 
+
+    printf("\n===============================================================\n");
+    printf("\t\t PLACE ORDER\n");
+    printf("===============================================================\n");
     do
     {
-        printf("Enter Source City Index:");
+        printf("\nEnter Source City Index:");
         scanf(" %d",&tempOrders[tempIndex][0]);
 
         printf("Enter  Destination City Index:");
         scanf(" %d",&tempOrders[tempIndex][1]);
 
+        if (tempOrders[tempIndex][0]< 0 || tempOrders[tempIndex][0] >= currentCityCount || tempOrders[tempIndex][1] < 0 || tempOrders[tempIndex][1] >= currentCityCount)
+        {
+            printf("Invalid city index! Please enter between 0 and %d.\n", currentCityCount - 1);
+            return -1;
+
+        }
         if(tempOrders[tempIndex][0]==tempOrders[tempIndex][1])
         {
             printf("Source and destination cannot be same enter again.\n");
+            return -1;
+        }
+
+        if (distances[tempOrders[tempIndex][0]][tempOrders[tempIndex][1]] == 0)
+        {
+            printf("Currently data not available for this delivery.\n");
+            return -1;
         }
     }
     while(tempOrders[tempIndex][0]==tempOrders[tempIndex][1]);
@@ -640,9 +758,10 @@ void printReports(int orders[MAX_ORDERS][4],
                             &totalDeliveriesCompleted,
                             &totalRevenue, &totalProfit,
                             &totalDeliveryTimeHours);
-
-    printf("\n=================== DELIVERY REPORTS ===================\n");
-    printf("Total Deliveries Completed : %d\n", totalDeliveriesCompleted);
+    printf("\n\n===============================================================\n");
+    printf("\t\tDELIVERY REPORTS \n");
+    printf("===============================================================\n");
+    printf("\nTotal Deliveries Completed : %d\n", totalDeliveriesCompleted);
 
 
 
@@ -659,7 +778,8 @@ void printReports(int orders[MAX_ORDERS][4],
     printf("Long Distance              : %d \n",routesData[0]);
     printf("Total Revenue              : %.2f LKR\n", totalRevenue);
     printf("Total Profit               : %.2f LKR\n", totalProfit);
-    printf("=========================================================\n");
+    printf("\n===============================================================\n\n");
+
 }
 
 void saveRoutesToFile(char cities[MAX_CITIES][100], int distances[MAX_CITIES][MAX_CITIES], int cityCount)
