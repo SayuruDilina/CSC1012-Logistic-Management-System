@@ -67,14 +67,16 @@ int main()
     double totalDeliveryTimeHours = 0.0;
     double totalRevenue = 0.0;
     double totalProfit= 0.0;
-    int longestRoute=0;
-    int shortestRoute=0;
+
     double deliveryData[MAX_ORDERS][7];
     int routesData[2];
+
     currentCityCount = loadRoutesFromFile(cities, distances);
     currentOrderCount = loadDeliveriesFromFile(orders,deliveryData,routesData);
     printf("Loaded %d cities and %d delivery records from files.\n",
            currentCityCount, currentOrderCount);
+    int longestRoute=routesData[0];
+    int shortestRoute=routesData[1];
     int totalDeliveriesCompleted = currentOrderCount;
     int status=0;
     do
